@@ -5,10 +5,12 @@ import Utils from '../utils';
 
 export default class RequestEmitter {
 
+
   declare private readonly table: string;
   declare private headers: Array<Record<string, any>>;
   declare private query: BodyInit;
   declare private uri: string;
+
 
   /**
    * Método construtor da classe.
@@ -23,6 +25,7 @@ export default class RequestEmitter {
     this.loadCommonHeaders();
   }
 
+
   /**
    * Envia uma requisição HTTP para a API do IXC Provedor, para listar registros, filtrando-os pela query de busca
    * definida por **setQuery(String query)**.
@@ -33,10 +36,11 @@ export default class RequestEmitter {
    */
   async GET(): Promise<IxcResponse> {
     this.setupUri();
-    this.enableIxcListingHeader();
+    this.toggleIxcListingHeader(true);
     const responseText = await this.emitRequest('POST', this.query);
     return new IxcResponse(responseText);
   }
+
 
   /**
    * Envia uma requisição HTTP para a API do IXC Provedor, para inserir um novo registro no banco de dados, na tabela
@@ -47,10 +51,11 @@ export default class RequestEmitter {
    */
   async POST(record: any): Promise<IxcResponse> {
     this.setupUri();
-    this.disableIxcListingHeader();
+    this.toggleIxcListingHeader(false);
     const responseText = await this.emitRequest('POST', record);
     return new IxcResponse(responseText);
   }
+
 
   /**
    * Envia uma requisição HTTP para a API do IXC Provedor, para atualizar um ou mais campos de um registro no banco
@@ -63,10 +68,11 @@ export default class RequestEmitter {
   async PUT(record: any): Promise<IxcResponse> {
     const { id, ...rest } = record;
     this.setupUri(id);
-    this.disableIxcListingHeader();
+    this.toggleIxcListingHeader(false);
     const responseText = await this.emitRequest('PUT', rest);
     return new IxcResponse(responseText);
   }
+
 
   /**
    * Envia uma requisição HTTP para a API do IXC Provedor, para excluir um determinado registro do banco de dados.
@@ -77,10 +83,11 @@ export default class RequestEmitter {
   async DELETE(record: any): Promise<IxcResponse> {
     const { id, ...rest } = record;
     this.setupUri(id);
-    this.disableIxcListingHeader();
+    this.toggleIxcListingHeader(false);
     const responseText = await this.emitRequest('DELETE', rest);
     return new IxcResponse(responseText);
   }
+
 
   /**
    * Define a query que será enviada no corpo de uma requisição de busca.
@@ -109,8 +116,16 @@ export default class RequestEmitter {
     this.query = query as BodyInit;
   }
 
+
   /**
    * Envia requisições para recursos específicos do IXC Provedor.
+   * 
+   * **Recursos Disponíveis:**
+   * - ativaContrato({ id_contrato }) --- **Ativa contratos de clientes no IXC Provedor**
+   * - desbloqueioDeConfianca({ id_contrato }) --- **Solicita liberação de um cliente inadimplente**
+   * - getArquivoBoleto({ id_fatura }) --- **Obtém um base64 do PDF da fatura de um cliente**
+   * - limparMAC({ id_login }) --- **Remove o endereço de MAC do login de um cliente**
+   * - liberacaoTemporaria({ id_contrato }) --- **Desbloqueia um contrato por 72h**
    * 
    * @returns Uma nova instância de IxcResponse, contendo os dados retornados pelo recurso do IXC Provedor.
    */
@@ -126,6 +141,7 @@ export default class RequestEmitter {
     }
   }
 
+
   /**
    * Obtém o valor da tabela, definida no construtor.
    * 
@@ -134,6 +150,7 @@ export default class RequestEmitter {
   protected getTable(): string {
     return this.table;
   }
+
 
   /**
    * Envia a requisição para a API do IXC Provedor e retorna o coteúdo em uma string.
@@ -157,37 +174,33 @@ export default class RequestEmitter {
     }
   }
 
+
   private loadCommonHeaders(): void {
-    const encodedToken = this.getEncodedTokenFromContext();
+    const token = Environment.loadInstance().getToken();
+    const encodedToken = Buffer.from(token ?? '').toString('base64');
+
     this.headers.push({ 'Authorization': `Basic ${encodedToken}` });
     this.headers.push({ 'Content-Type': 'application/json' });
     this.headers.push({ 'ixcsoft': '' });
   }
 
-  private getEncodedTokenFromContext(): string {
-    const token = Environment.loadInstance().getToken();
-    return Buffer.from(token ?? '').toString('base64');
-  }
 
   private setupUri(id?: number): void {
     const host = Environment.loadInstance().getDomain();
     const pathId = id ? `/${id}` : '';
+
     this.uri = `https://${host}/webservice/v1/${this.table}${pathId}`;
   }
 
-  private enableIxcListingHeader(): void {
+
+  private toggleIxcListingHeader(enable: boolean): void {
     const headerIndex = this.headers.findIndex(h => Object.keys(h).includes('ixcsoft'));
+    const headerValue = enable ? 'listar' : ''
     if (headerIndex > -1) {
-      this.headers[headerIndex]['ixcsoft'] = 'listar';
+      this.headers[headerIndex]['ixcsoft'] = headerValue;
     }
   }
 
-  private disableIxcListingHeader(): void {
-    const headerIndex = this.headers.findIndex(h => Object.keys(h).includes('ixcsoft'));
-    if (headerIndex > -1) {
-      this.headers[headerIndex]['ixcsoft'] = '';
-    }
-  }
 
   private createDefaultHeaders(): HeadersInit {
     return this.headers.reduce((accumulator, current) => {
