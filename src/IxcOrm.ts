@@ -27,7 +27,7 @@ export default abstract class IxcOrm extends RequestEmitter {
 
   /**
    * Sobrescreve a chamada para **emitRequest(Method)** na superclasse {@link RequestEmitter},
-   * enviando a requisição para a API do IXC Provedor e retorna o coteúdo em um string.
+   * enviando a requisição para a API do IXC Provedor e retornando o conteúdo em uma string.
    * 
    * @param method GET, POST, PUT ou DELETE.
    * @returns O conteúdo da resposta em uma string.
