@@ -93,8 +93,8 @@ Existem alguns `endpoints` que a API do IXC Provedor disponibiliza, a fim de "en
 ```typescript
 import { Recurso } from 'ixc-orm';
 
-const id_contrato = 45852;
-const response = await Recurso.desbloqueioDeConfianca({ id_contrato });
+const id_fatura = 45852;
+const response = await Recurso.getArquivoBoleto({ id_fatura });
 ```
 
 
