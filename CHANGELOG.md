@@ -1,4 +1,5 @@
 # 🔄 CHANGELOG
+- [v2.3.5 - 18 de abril de 2026](#v235)
 - [v2.0.1 - 07 de fevereiro de 2026](#v201)
 - [v2.0.0 - 24 de dezembro de 2025](#v200)
 - [v1.10.6 - 23 de dezembro de 2025](#v1106)
@@ -16,6 +17,9 @@
 
 
 ## 🚀 Novidades
+
+### v2.3.5
+* **Melhoria:** Adicionada a funcionalidade de filtrar buscar com o filtro **"diferente de"**, através do método `not(value: string | number)` da classe <a href="https://github.com/fscarmo/ixc-orm/blob/main/src/IxcOrm.ts">IxcOrm</a>.
 
 ### v2.0.1
 * **Correção:** Importação do enum *Sort* adicionanda ao `index` da api.
